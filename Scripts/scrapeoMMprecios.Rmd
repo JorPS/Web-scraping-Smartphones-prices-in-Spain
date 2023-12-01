@@ -1,0 +1,183 @@
+---
+title: "MediaMarkt precios"
+author: "Jorge Pascual Segovia"
+date: "2023-11-27"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(xml2)
+library(httr)
+library(lubridate)
+
+set_config(
+  user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0")
+)
+```
+
+```{r}
+url_raw <- "https://www.mediamarkt.es/es/category/smartphones-263.html"
+
+url_list <- c()
+
+for (i in seq(1,30)){
+  current_url <- paste0("https://www.mediamarkt.es/es/category/smartphones-263.html?page=", i)
+  url_list <- c(url_list, current_url)
+}
+```
+
+```{r}
+
+main_url_list <- c()
+
+for(i in url_list){
+  Sys.sleep(10)
+  url <- i %>% read_html() %>% xml_child()
+  
+  main_url_ext <- url %>% xml_find_all("//a[@class = 'sc-db43135e-1 gpEOUZ sc-b0d9c874-0 gJSJVL']") %>% xml_attr("href")
+  for (i in main_url_ext){main_url_list <- c(main_url_list, paste0("https://www.mediamarkt.es", i))}
+}
+```
+
+```{r}
+# SCRAPEO
+
+df <- data.frame(
+    Nombre = character(),
+    Precio = character(),
+    Precio_sin_rebajar = character(),
+    Memoria = character(),
+    RAM = character(),
+    Connection = character(),
+    TimeStamp = character(),
+    Link = character()
+  )
+
+for (i in main_url_list){
+  
+  Sys.sleep(5)
+  
+  # URL
+  current_url <- i %>% read_html() %>% xml_child()
+  
+  Sys.sleep(2)
+  
+  # NOMBRE MODELO
+  name <- current_url %>% xml_find_all("//title[@data-rh = 'true']") %>% xml_text()
+  
+  Sys.sleep(2)
+  
+  # PRECIO
+  precio <- current_url %>% xml_find_all("//span[@data-test = 'branded-price-whole-value']") %>% xml_text() %>% str_remove_all(",")
+  
+  # PRECIO SIN REBAJA
+  precio_sin_rebaja <- current_url %>% xml_find_all("//span[@class = 'sc-f1f881c4-0 iEJZRr']") %>% xml_text()
+  if (length(precio_sin_rebaja) == 0) {precio_sin_rebaja <- precio}
+  precio_sin_rebaja <- precio_sin_rebaja %>% str_remove_all(",")
+  
+  Sys.sleep(2)
+  
+  # Memoria y ram
+  memory_list <- current_url %>% xml_find_all("//div[@class = 'sc-1fd333af-0 HsWZU']//td[@class = 'sc-27ebc524-0 ca-dqbf sc-1fd333af-1 eAitx']") %>% xml_text()
+  
+  memory <- memory_list[5]#%>% str_extract_all("\\d+") %>% as.numeric()
+  ram <- memory_list[7] #%>% str_extract_all("\\d+") %>% as.numeric()
+  
+  # CONNECTION
+  if (grepl("5G|5g", name)) {conn <- "5G"} else {conn <- "4G"}
+  
+  current_row <- data.frame(
+    Nombre = name,
+    Precio = precio,
+    Precio_sin_rebajar = precio_sin_rebaja,
+    Memoria = memory,
+    RAM = ram,
+    Connection = conn,
+    TimeStamp = Sys.time() %>% as.POSIXct() %>% format("%d/%m/%Y %H:%M:%S"),
+    Link = i
+  )
+  
+  rbind(df, current_row)
+}
+
+df
+```
+
+
+```{r}
+#PRUEBA
+
+# URL
+current_url <- main_url_list[4] %>% read_html() %>% xml_child()
+
+# NOMBRE MODELO
+name <- current_url %>% xml_find_all("//title[@data-rh = 'true']") %>% xml_text()
+
+# PRECIO
+precio <- current_url %>% xml_find_all("//span[@data-test = 'branded-price-whole-value']") %>% xml_text() %>% str_remove_all(",")
+
+# PRECIO SIN REBAJA
+precio_sin_rebaja <- current_url %>% xml_find_all("//span[@class = 'sc-f1f881c4-0 iEJZRr']") %>% xml_text()
+if (length(precio_sin_rebaja) == 0) {precio_sin_rebaja <- precio}
+precio_sin_rebaja <- precio_sin_rebaja %>% str_remove_all(",")
+
+# Memoria y ram
+memory_list <- current_url %>% xml_find_all("//div[@class = 'sc-1fd333af-0 HsWZU']//td[@class = 'sc-27ebc524-0 ca-dqbf sc-1fd333af-1 eAitx']") %>% xml_text()
+
+memory <- memory_list[5] %>% str_extract_all("\\d+") %>% as.numeric()
+ram <- memory_list[7] %>% str_extract_all("\\d+") %>% as.numeric()
+
+# CONNECTION
+if (grepl("5G|5g", name)) {conn <- "5G"} else {conn <- "4G"}
+
+current_row <- data.frame(
+  Nombre = name,
+  Precio = precio,
+  Precio_sin_rebajar = precio_sin_rebaja,
+  Memoria = memory,
+  RAM = ram,
+  Connection = conn,
+  TimeStamp = Sys.time() %>% as.POSIXct() %>% format("%d/%m/%Y %H:%M:%S")
+)
+
+df <- rbind(df, current_row)
+df
+```
+
+
+```{r}
+#PRUEBA desde main page
+
+url <- url_list[1] %>% read_html() %>% xml_child()
+main_url_list <- c()
+
+main_url_ext <- url %>% xml_find_all("//a[@class = 'sc-db43135e-1 gpEOUZ sc-b0d9c874-0 gJSJVL']") %>% xml_attr("href")
+for (i in main_url_ext){main_url_list <- c(main_url_list, paste0("https://www.mediamarkt.es", i))}
+# precio <- url %>% xml_find_all("//span[@class = 'sc-f1f881c4-0 eDRAfL sc-a5ca0dae-2 cgoIlf']") %>% xml_text() %>% 
+#   str_extract("\\d+") %>% as.numeric()
+
+precios <- url %>% xml_find_all("//div[@display = 'flex']//span[@spacing = 'base']") %>% xml_text() %>% 
+  str_extract("\\d+") %>% as.numeric()
+
+# precio_sin_rebajar <- url %>% xml_find_all("//span[@class = 'sc-f1f881c4-0 eDRAfL sc-a5ca0dae-2 cgoIlf']") %>% xml_text() %>% 
+#   str_extract("\\d+") %>% as.numeric()
+
+# if(is.na(precio_sin_rebajar)){
+precio_sin_rebajar <- url %>% xml_find_all("//div[@display = 'flex']//span[@class = 'sc-f1f881c4-0 kZpYVs']") %>% xml_text() %>% 
+  str_extract("\\d+") %>% as.numeric()
+# }
+
+names <- url %>% xml_find_all("//p[@data-test = 'product-title']") %>% xml_text() %>% str_remove("Móvil - ")
+```
+
+```{r}
+for (i in main_url_list){
+  
+  Sys.sleep(5)
+  
+  # URL
+  current_url <- i %>% read_html() %>% xml_child()
+}
+```
+
