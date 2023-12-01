@@ -10,10 +10,12 @@ library(tidyverse)
 library(xml2)
 library(httr)
 library(lubridate)
+```
 
-set_config(
-  user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
-)
+```{r}
+user_agent <- readLines("../user_agent.txt") # REPLACE THE ARGUMENT WITH YOUR USER AGENT
+
+set_config(user_agent(user_agent)) 
 ```
 
 ```{r}
@@ -56,7 +58,7 @@ df <- data.frame(
 
 for (i in main_url_list){
   
-  Sys.sleep(5)
+  Sys.sleep(4)
   
   # URL
   current_url <- i %>% read_html() %>% xml_child()
