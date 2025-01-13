@@ -1,0 +1,467 @@
+---
+title: "Smartphones_Masterdata"
+author: "Jorge Pascual Segovia"
+date: "2024-12-23"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(xml2)
+library(httr)
+library(lubridate)
+
+set_config(
+  user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0")
+)
+```
+
+```{r}
+# URL de GSM arena home
+gsm_home_url <- 'https://www.gsmarena.com/'
+gsm_home_html <- read_html(gsm_home_url)
+```
+
+```{r}
+# EXTRAER LA ULTIMA PARTE DE LAS URL
+fabr_semiurl_list <- gsm_home_html %>% xml_find_all("//div[@class = 'brandmenu-v2 light l-box clearfix']//li/a") %>% 
+  xml_attr("href") # %>% as.list()
+# fabr_semiurl_list
+
+post_fabr_semiurl_list <- fabr_semiurl_list[c(1:16, 20, 21, 33)]
+post_fabr_semiurl_list
+```
+
+```{r}
+# MONTAR LAS URL
+fabr_url_list <- c()
+for (i in seq_along(post_fabr_semiurl_list)) {
+  fabr_url_list[i] <- paste0("https://www.gsmarena.com/", post_fabr_semiurl_list[i])
+}
+fabr_url_list
+```
+
+### LOOP
+
+```{r}
+
+all_fabr_products <- c()
+
+for (fabr in fabr_url_list){
+  # CUENTO EL Nº DE PAGS PARA EL LOOP
+  url_i <- fabr %>% read_html()
+  Sys.sleep(8)
+  n_pages <- url_i %>% xml_find_all("//div[@class = 'nav-pages']//a") %>% xml_text()
+  page_2_url <- url_i %>% xml_find_all("//div[@class = 'nav-pages']//a") %>% xml_attr("href")
+  page_2_url <- paste0("https://www.gsmarena.com/", page_2_url[2])
+  n_pages <- n_pages %>% as.numeric() %>% na.omit() %>% max() 
+  n_pages <- ifelse(n_pages < 1|  n_pages == Inf, 0, n_pages)
+  
+  # Extraigo la extension de cada nº de pag y la pego a la main url
+  fabr_pages_list <- c(fabr)
+  if(n_pages!=0){
+    for (pag in seq(2, n_pages)){
+      fabr_page_url <- paste0(substr(page_2_url, 1, nchar(page_2_url)-5), pag, ".php")
+      fabr_pages_list <- c(fabr_pages_list, fabr_page_url)
+    }
+  } else {
+    fabr_pages_list <- fabr 
+  }
+  
+  # Obtengo la extension url de cada producto
+  for(x in fabr_pages_list){
+    fabr_page <- x %>% read_html()
+    Sys.sleep(8)
+    
+    product_url_list <- fabr_page %>% xml_find_all("//div[@class = 'makers']/ul//a") %>% 
+      xml_attr("href")
+    all_fabr_products <- c(all_fabr_products, product_url_list)
+  }
+}
+all_fabr_products 
+```
+
+
+```{r}
+# Transformar en URL las extensiones
+products_complete_url <- c()
+
+for (i in all_fabr_products){
+  complete_url <- paste0("https://www.gsmarena.com/", i)
+  products_complete_url <- c(products_complete_url, complete_url)
+}
+
+length(products_complete_url)
+```
+
+# Extracción de características
+
+```{r}
+# Extraer características de cada producto
+
+# masterdata_raw <- data.frame(
+#     NAME = character(),
+#     MODEL_ID = character(),
+#     RELEASE_DATE = character(),
+#     STATUS = character(),
+#     BULK = character(),
+#     SIZE = character(),
+#     COLORS = character(),
+#     RESOLUTION = character(),
+#     OPERATIVE_SYSTEM = character(),
+#     CHIPSET = character(),
+#     CPU = character(),
+#     GPU = character(),
+#     MEMORY_INT = character(),
+#     MEMORY_RAM = character(),
+#     CARD_SLOT = character(),
+#     BLUETOOTH = character(),
+#     NFC = character(),
+#     USB = character(),
+#     BATTERY_MAH = character(),
+#     BATTERY_TYPE = character(),
+#     BATTERY_WIRELESS = character(),
+#     URL = character()
+# )
+
+# products_complete_url_chopped <- products_complete_url[seq(1, 5000, 400)] # recorto parte para probar
+products_complete_url <- products_complete_url[nrow(masterdata_raw)+1:length(products_complete_url)]
+
+for (url in products_complete_url){
+  
+  product_html <- url %>% read_html()
+  Sys.sleep(9)
+  
+  # NOMBRE DE MODELO
+  name <- product_html %>% xml_find_all("//h1[@data-spec = 'modelname']") %>% xml_text()
+  model_id <- product_html %>% xml_find_all("//tr//td[@dat
+                                            a-spec = 'models']") %>% xml_text()
+  # FECHA DE SALIDA
+  released <- product_html %>% xml_find_all("//span[@data-spec = 'released-hl']") %>% xml_text() # if 'cancelled', next iteration
+  status <- product_html %>% xml_find_all("//tr//td[@data-spec = 'status']") %>% xml_text()
+  
+  # DIMENSIONES
+  bulk <- product_html %>% xml_find_all("//span[@data-spec = 'body-hl']") %>% xml_text()
+  size <- product_html %>% xml_find_all("//td[@data-spec = 'displaysize']") %>% xml_text()
+  available_colors <- product_html %>% xml_find_all("//tr//td[@data-spec = 'colors']") %>% xml_text()
+    
+  # PANTALLA
+  resolution <- product_html %>% xml_find_all("//tr//td[@data-spec = 'displayresolution']") %>% xml_text()
+  
+  # SISTEMA OPERATIVO 
+  OS <- product_html %>% xml_find_all("//tr//td[@data-spec = 'os']") %>% xml_text()
+  # CHIPSET
+  chipset <- product_html %>% xml_find_all("//tr//td[@data-spec = 'chipset']") %>% xml_text()
+  # CPU
+  cpu <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cpu']") %>% xml_text()
+  # GPU
+  gpu <- product_html %>% xml_find_all("//tr//td[@data-spec = 'gpu']") %>% xml_text()
+  
+  # MEMORIA
+  memory_raw <- product_html %>% xml_find_all("//tr//td[@data-spec = 'internalmemory']") %>% xml_text()
+  memory_int <- str_extract(memory_raw, ".*?GB")
+  memory_ram <- str_remove(memory_raw, memory_int) %>% str_extract(".*?.B") %>% str_squish()
+  card_slot <- product_html %>% xml_find_all("//tr//td[@data-spec = 'memoryslot']") %>% xml_text()
+  
+  # CAMERA
+  # n_cameras <- product_html %>% xml_find_all("//tr//td[@class = 'ttl']//a[@href = 'glossary.php3?term=camera']") %>% xml_text()
+  # n_cameras <- n_cameras[1]
+  # 
+  # cameras <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cam1modules']") %>% xml_text()
+  # camera1 <- camera1 %>% str_extract(".*(?=\\r\\n)")
+  # camera2
+  # camera3
+  # camera4
+  # 
+  # video <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cam1video']") %>% xml_text()
+  # 
+  # selfie_raw <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cam2modules']") %>% xml_text()
+  # selfie_raw
+  # selfie <- selfie_raw %>% str_extract(".*(?=\\r\\n)")
+  # selfie <- ifelse(is.na(selfie), selfie_raw, selfie)
+  # selfie_video <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cam2video']") %>% xml_text()
+  
+  # CONNECTIONS
+  bluetooth <- product_html %>% xml_find_all("//tr//td[@data-spec = 'bluetooth']") %>% xml_text()
+  nfc <- product_html %>% xml_find_all("//tr//td[@data-spec = 'nfc']") %>% xml_text()
+  usb <- product_html %>% xml_find_all("//tr//td[@data-spec = 'usb']") %>% xml_text()
+  Sys.sleep(3)
+  # BATTERY
+  battery_raw <- product_html %>% xml_find_all("//tr//td[@data-spec = 'batdescription1']") %>% xml_text()
+  battery_mah <- battery_raw %>% str_extract("\\d*? mAh") %>% str_squish()
+  battery_type <- battery_raw %>% str_extract(".*(?= \\d)") %>% str_squish()
+  
+  battery_charge_raw <- product_html %>% xml_find_all("//table[tr//td[@data-spec = 'batdescription1']]//td[@class = 'nfo']") %>% xml_text()
+  battery_charge_raw <- ifelse(length(battery_charge_raw) > 1, paste(battery_charge_raw, collapse = "-"), battery_charge_raw)
+  
+  battery_charge <- battery_charge_raw %>% str_extract(".*") %>% str_remove_all("\\(advertised\\)") %>% str_squish()
+  battery_wireless_raw <- battery_charge_raw %>% str_remove_all("/r/") %>% str_squish() %>% toupper()
+  if (grepl("WIRELESS", battery_wireless_raw)){
+    battery_wireless = "Yes"
+  } else {
+    battery_wireless = "No"
+  }
+  
+  df_actual <- data.frame(
+    NAME = ifelse(length(name) == 0, "No", name),
+    MODEL_ID = ifelse(length(model_id) == 0, "No", model_id),
+    RELEASE_DATE = ifelse(length(released) == 0, "No", released),
+    STATUS = ifelse(length(status) == 0, "No", status),
+    BULK = ifelse(length(bulk) == 0, "No", bulk),
+    SIZE = ifelse(length(size) == 0, "No", size),
+    COLORS = ifelse(length(available_colors) == 0, "No", available_colors),
+    RESOLUTION = ifelse(length(resolution) == 0, "No", resolution),
+    OPERATIVE_SYSTEM = ifelse(length(OS) == 0, "No", OS),
+    CHIPSET = ifelse(length(chipset) == 0, "No", chipset),
+    CPU = ifelse(length(cpu) == 0, "No", cpu),
+    GPU = ifelse(length(gpu) == 0, "No", gpu),
+    MEMORY_INT = ifelse(length(memory_int) == 0, "No", memory_int),
+    MEMORY_RAM = ifelse(length(memory_ram) == 0, "No", memory_ram),
+    CARD_SLOT = ifelse(length(card_slot) == 0, "No", card_slot),
+    BLUETOOTH = ifelse(length(bluetooth) == 0, "No", bluetooth),
+    NFC = ifelse(length(nfc) == 0, "No", nfc),
+    USB = ifelse(length(usb) == 0, "No", usb),
+    BATTERY_MAH = ifelse(length(battery_mah) == 0, "No", battery_mah),
+    BATTERY_TYPE = ifelse(length(battery_type) == 0, "No", battery_type),
+    BATTERY_WIRELESS = ifelse(length(battery_wireless) == 0, "No", battery_wireless),
+    URL = ifelse(length(url) == 0, "No", url)
+  )
+  masterdata_raw <- rbind(masterdata_raw, df_actual)
+}
+
+masterdata_raw
+```
+
+
+# GUARDO EL RAW 
+
+```{r}
+write_csv2(df_md, "C:/Users/Jorge Pascual S/Desktop/Web-scraping-Smartphones-prices-in-Spain/Data/Masterdata_raw.csv")
+```
+
+# PRUEBAS
+
+```{r}
+product_html <- products_complete_url_chopped[4] %>% read_html()
+
+# NOMBRE DE MODELO
+name <- product_html %>% xml_find_all("//h1[@data-spec = 'modelname']") %>% xml_text()
+model_id <- product_html %>% xml_find_all("//tr//td[@data-spec = 'models']") %>% xml_text()
+# FECHA DE SALIDA
+released <- product_html %>% xml_find_all("//span[@data-spec = 'released-hl']") %>% xml_text() # if 'cancelled', next iteration
+status <- product_html %>% xml_find_all("//tr//td[@data-spec = 'status']") %>% xml_text()
+
+# DIMENSIONES
+bulk <- product_html %>% xml_find_all("//span[@data-spec = 'body-hl']") %>% xml_text()
+size <- product_html %>% xml_find_all("//td[@data-spec = 'displaysize']") %>% xml_text()
+available_colors <- product_html %>% xml_find_all("//tr//td[@data-spec = 'colors']") %>% xml_text()
+  
+# PANTALLA
+resolution <- product_html %>% xml_find_all("//tr//td[@data-spec = 'displayresolution']") %>% xml_text()
+
+# SISTEMA OPERATIVO 
+OS <- product_html %>% xml_find_all("//tr//td[@data-spec = 'os']") %>% xml_text()
+# CHIPSET
+chipset <- product_html %>% xml_find_all("//tr//td[@data-spec = 'chipset']") %>% xml_text()
+# CPU
+cpu <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cpu']") %>% xml_text()
+# GPU
+gpu <- product_html %>% xml_find_all("//tr//td[@data-spec = 'gpu']") %>% xml_text()
+
+# MEMORIA
+memory_raw <- product_html %>% xml_find_all("//tr//td[@data-spec = 'internalmemory']") %>% xml_text()
+memory_int <- str_extract(memory_raw, ".*?GB")
+memory_ram <- str_remove(memory_raw, memory_int) %>% str_extract(".*?.B") %>% str_squish()
+card_slot <- product_html %>% xml_find_all("//tr//td[@data-spec = 'memoryslot']") %>% xml_text()
+
+# CAMERA
+# n_cameras <- product_html %>% xml_find_all("//tr//td[@class = 'ttl']//a[@href = 'glossary.php3?term=camera']") %>% xml_text()
+# n_cameras <- n_cameras[1]
+# 
+# cameras <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cam1modules']") %>% xml_text()
+# camera1 <- camera1 %>% str_extract(".*(?=\\r\\n)")
+# camera2
+# camera3
+# camera4
+# 
+# 
+# video <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cam1video']") %>% xml_text()
+# 
+# selfie_raw <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cam2modules']") %>% xml_text()
+# selfie_raw
+# selfie <- selfie_raw %>% str_extract(".*(?=\\r\\n)")
+# selfie <- ifelse(is.na(selfie), selfie_raw, selfie)
+# selfie_video <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cam2video']") %>% xml_text()
+
+# CONNECTIONS
+bluetooth <- product_html %>% xml_find_all("//tr//td[@data-spec = 'bluetooth']") %>% xml_text()
+nfc <- product_html %>% xml_find_all("//tr//td[@data-spec = 'nfc']") %>% xml_text()
+usb <- product_html %>% xml_find_all("//tr//td[@data-spec = 'usb']") %>% xml_text()
+
+# BATTERY
+battery_raw <- product_html %>% xml_find_all("//tr//td[@data-spec = 'batdescription1']") %>% xml_text()
+battery_mah <- battery_raw %>% str_extract("\\d*? mAh") %>% str_squish()
+battery_type <- battery_raw %>% str_extract(".*(?= \\d)") %>% str_squish()
+
+battery_charge_raw <- product_html %>% xml_find_all("//table[tr//td[@data-spec = 'batdescription1']]//td[@class = 'nfo']") %>% xml_text()
+battery_charge_raw <- ifelse(length(battery_charge_raw) > 1, paste(battery_charge_raw, collapse = "-"), battery_charge_raw)
+
+battery_charge <- battery_charge_raw %>% str_extract(".*") %>% str_remove_all("\\(advertised\\)") %>% str_squish()
+battery_wireless_raw <- battery_charge_raw %>% str_remove_all("/r/") %>% str_squish() %>% toupper()
+if (grepl("WIRELESS", battery_wireless_raw)){
+  battery_wireless = "Yes"
+} else {
+  battery_wireless = "No"
+}
+
+df_actual <- data.frame(
+  NAME = ifelse(length(name) == 0, "No", name),
+  MODEL_ID = ifelse(length(model_id) == 0, "No", model_id),
+  RELEASE_DATE = ifelse(length(released) == 0, "No", released),
+  STATUS = ifelse(length(status) == 0, "No", status),
+  BULK = ifelse(length(bulk) == 0, "No", bulk),
+  SIZE = ifelse(length(size) == 0, "No", size),
+  COLORS = ifelse(length(available_colors) == 0, "No", available_colors),
+  RESOLUTION = ifelse(length(resolution) == 0, "No", resolution),
+  OPERATIVE_SYSTEM = ifelse(length(OS) == 0, "No", OS),
+  CHIPSET = ifelse(length(chipset) == 0, "No", chipset),
+  CPU = ifelse(length(cpu) == 0, "No", cpu),
+  GPU = ifelse(length(gpu) == 0, "No", gpu),
+  MEMORY_INT = ifelse(length(memory_int) == 0, "No", memory_int),
+  MEMORY_RAM = ifelse(length(memory_ram) == 0, "No", memory_ram),
+  CARD_SLOT = ifelse(length(card_slot) == 0, "No", card_slot),
+  BLUETOOTH = ifelse(length(bluetooth) == 0, "No", bluetooth),
+  NFC = ifelse(length(nfc) == 0, "No", nfc),
+  USB = ifelse(length(usb) == 0, "No", usb),
+  BATTERY_MAH = ifelse(length(battery_mah) == 0, "No", battery_mah),
+  BATTERY_TYPE = ifelse(length(battery_type) == 0, "No", battery_type),
+  BATTERY_WIRELESS = ifelse(length(battery_wireless) == 0, "No", battery_wireless),
+  URL = ifelse(length(url) == 0, "No", url)
+)
+
+masterdata_raw <- rbind(masterdata_raw, df_actual)
+
+masterdata_raw
+```
+
+```{r}
+cat(
+  "NAME =", name, "\n",
+  "MODEL_ID =", model_id, "\n",
+  "RELEASE_DATE =", released, "\n",
+  "STATUS: ", status, "\n",
+  "BULK =", bulk, "\n",
+  "SIZE =", size, "\n",
+  "COLORS =", available_colors, "\n",
+  "RESOLUTION =", resolution, "\n",
+  "OPERATIVE_SYSTEM =", OS, "\n",
+  "CHIPSET =", chipset, "\n",
+  "CPU =", cpu, "\n",
+  "GPU =", gpu, "\n",
+  "MEMORY_INT =", memory_int, "\n",
+  "MEMORY_RAM =", memory_ram, "\n",
+  "CARD_SLOT =", card_slot, "\n",
+  "BLUETOOTH =", bluetooth, "\n",
+  "NFC =", nfc, "\n",
+  "USB =", usb, "\n",
+  "BATTERY_MAH =", battery_mah, "\n",
+  "BATTERY_TYPE =", battery_type, "\n",
+  "BATTERY_WIRELESS =", battery_wireless, "\n",
+  "URL =", products_complete_url_chopped[4], "\n"
+)
+```
+
+
+```{r}
+cameras <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cam1modules']") %>% xml_text()
+camera1 <- camera1 %>% str_extract(".*(?=\\r\\n)")
+cameras <- paste0(cameras, "\r\n")
+cameras %>% str_extract_all("(?=\r\n).*?(?=\r\n)")
+```
+
+
+```{r}
+# battery_charge_raw <- battery_charge_raw[2]
+# battery_charge_raw <- battery_charge_raw %>% xml_text()
+# battery_charge <- battery_charge_raw %>% str_extract(".*") %>% str_remove_all("\\(advertised\\)") %>% str_squish()
+# battery_charge
+# battery_wireless_raw <- battery_charge_raw %>% str_remove_all("/r/") %>% str_squish() %>% toupper()
+# if (grepl("WIRELESS", battery_wireless_raw)){
+#   battery_wireless = "Yes"
+# } else {
+#   battery_wireless = "No"
+# }
+# 
+# battery_wireless
+```
+
+
+# LIMPIEZA
+
+```{r}
+# duplicados en la lista de url
+freq_table <- table(products_complete_url)
+freq_table[freq_table > 1]
+
+
+```
+
+```{r}
+# urls duplicados en la MD
+dup_table <- duplicated(masterdata_raw$URL)
+masterdata_raw$URL[duplicated(masterdata_raw$URL)]
+
+```
+
+```{r}
+sum(duplicated(masterdata_raw$))
+```
+
+```{r}
+df_md[df_md$MODEL_ID != "No",]
+```
+
+
+```{r}
+df_md <- masterdata_raw
+```
+
+
+#### TRANSFORMACIÓN DE VARIABLES
+
+```{r}
+df_md <- masterdata_raw
+
+df_md$NAME <- toupper(df_md$NAME) 
+df_md <- df_md %>% mutate(
+  RELEASE_DATE = str_remove(
+    str_extract(RELEASE_DATE, "\\d.+"), 
+    "\\s\\d{1,2}"), # extraigo solo la fecha
+  AVAILABLE = ifelse(grepl("Available", STATUS), 1, 0) # Creo variable binaria para su disponibilidad en el mercado
+)
+
+# cambio los QX por un mes
+df_md <- df_md %>% mutate(
+  RELEASE_DATE = str_replace(RELEASE_DATE, "Q1", "March"),
+  RELEASE_DATE = str_replace(RELEASE_DATE, "Q2", "June"),
+  RELEASE_DATE = str_replace(RELEASE_DATE, "Q3", "September"),
+  RELEASE_DATE = str_replace(RELEASE_DATE, "Q4", "December")
+)
+
+# Añado el mes a los que no tienen y lo transformo todo en fecha
+df_md <- df_md %>% mutate(
+  RELEASE_DATE = ifelse(grepl("^\\d{4}$", RELEASE_DATE), paste0(RELEASE_DATE, ", July"), RELEASE_DATE),
+  RELEASE_DATE = format(ymd(paste0(RELEASE_DATE, " 1")), "%m/%Y")
+)
+```
+
+```{r}
+df_md <- df_md %>% mutate(
+  WEIGHT = sapply(str_extract_all(BULK, "\\d+(\\.\\d+)?(\\s)?(g|kg|mg)"), function(x) paste(x, collapse = ", "))#, 
+  # THICKNESS = ,
+  # INCHES = ,
+  # SCREEN_TO_BODY = 
+)
+view(df_md %>% select(NAME, BULK, THICKNESS))
+```
+
