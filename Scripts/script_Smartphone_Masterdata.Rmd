@@ -239,7 +239,7 @@ masterdata_raw
 write_csv2(df_md, "C:/Users/Jorge Pascual S/Desktop/Web-scraping-Smartphones-prices-in-Spain/Data/Masterdata_raw.csv")
 ```
 
-# PRUEBAS
+###### pruebas
 
 ```{r}
 product_html <- products_complete_url_chopped[4] %>% read_html()
@@ -373,10 +373,10 @@ cat(
 
 
 ```{r}
-cameras <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cam1modules']") %>% xml_text()
-camera1 <- camera1 %>% str_extract(".*(?=\\r\\n)")
-cameras <- paste0(cameras, "\r\n")
-cameras %>% str_extract_all("(?=\r\n).*?(?=\r\n)")
+# cameras <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cam1modules']") %>% xml_text()
+# camera1 <- camera1 %>% str_extract(".*(?=\\r\\n)")
+# cameras <- paste0(cameras, "\r\n")
+# cameras %>% str_extract_all("(?=\r\n).*?(?=\r\n)")
 ```
 
 
@@ -414,7 +414,7 @@ masterdata_raw$URL[duplicated(masterdata_raw$URL)]
 ```
 
 ```{r}
-sum(duplicated(masterdata_raw$))
+sum(duplicated(masterdata_raw))
 ```
 
 ```{r}
@@ -440,7 +440,7 @@ df_md <- df_md %>% mutate(
   AVAILABLE = ifelse(grepl("Available", STATUS), 1, 0) # Creo variable binaria para su disponibilidad en el mercado
 )
 
-# cambio los QX por un mes
+# cambio los Qx por un mes
 df_md <- df_md %>% mutate(
   RELEASE_DATE = str_replace(RELEASE_DATE, "Q1", "March"),
   RELEASE_DATE = str_replace(RELEASE_DATE, "Q2", "June"),
@@ -453,15 +453,160 @@ df_md <- df_md %>% mutate(
   RELEASE_DATE = ifelse(grepl("^\\d{4}$", RELEASE_DATE), paste0(RELEASE_DATE, ", July"), RELEASE_DATE),
   RELEASE_DATE = format(ymd(paste0(RELEASE_DATE, " 1")), "%m/%Y")
 )
+
+# Caracteristicas físicas
+df_md <- df_md %>% mutate(
+  WEIGHT = sapply(str_extract_all(BULK, "\\d+(\\.\\d+)?(\\s)?(g|kg|mg)"), function(x) paste(x, collapse = ", ")), 
+  THICKNESS = sapply(str_extract_all(BULK, "\\d+(\\.\\d+)?(\\s)?mm"), function(x) paste(x, collapse = ", ")), 
+  INCHES = sapply(str_extract_all(SIZE, "\\d+.+[Ii]nches"), function(x) paste(x, collapse = ", ")), 
+  SCREEN_TO_BODY = sapply(str_extract_all(SIZE, "\\d+(\\.\\d+)?% screen-to-body ratio"), function(x) paste(x, collapse = ", ")) 
+)
+
+# Resolucion
+df_md <- df_md %>% mutate(
+  RESOLUTION_PIXELS = str_extract(RESOLUTION, "\\d+ x \\d+(?= pixels)"),
+  PIXEL_DENSITY = as.numeric(str_extract(RESOLUTION, "\\d+(?= ppi)"))
+)
+
+# Sistema Operativo
+df_md <- df_md %>% mutate(
+  OS_BRAND = str_extract(OPERATIVE_SYSTEM, ".+Watch OS|^.[^(\\s|,)]+"),
+  OS_MODEL = str_remove(OPERATIVE_SYSTEM, "(, no )?Google Play Services& - 2 GB RAM versionAndroid 11 - 3 GB RAM version&, planned.+& - InternationalAndroid 12, MagicOS 7 - China")
+)
+
+# CHIPSET
+df_md <- df_md %>% mutate(
+  CHIP_BRAND = str_extract(CHIPSET, "^[^\\s,]+"), # Extrae hasta el primer espacio o coma
+  CHIP_MODEL = sapply(CHIPSET, function(x) { 
+    extracted <- str_extract(x, ".*?(?= \\(\\d+ nm)")
+    ifelse(is.na(extracted), x, extracted) 
+  }),
+  CHIP_SIZE_NM = str_extract(CHIPSET, "\\d+(?= nm)") # Extrae el tamaño en nm
+)
+
+# CPU
+df_md <- df_md %>% mutate(
+  CPU_EXTENDED = CPU,
+  CPU = sapply(CPU, function(x) { 
+    extracted <- str_extract(x, ".+(?=\\s-\\s)")
+    ifelse(is.na(extracted), x, extracted) 
+  })
+)
+df_md$CPU <- str_replace_all(df_md$CPU, "8-core","Octa-core")
+df_md$CPU <- str_replace_all(df_md$CPU, "10-core","Deca-core")
+
+df_md <- df_md %>% mutate(
+  CPU_CORES = case_when(
+      str_detect(tolower(CPU_CORES), "dual") ~ 2,
+      str_detect(tolower(CPU_CORES), "quad") ~ 4,
+      str_detect(tolower(CPU_CORES), "penta") ~ 5,
+      str_detect(tolower(CPU_CORES), "hexa") ~ 6,
+      str_detect(tolower(CPU_CORES), "octa") ~ 8,
+      str_detect(tolower(CPU_CORES), "nona") ~ 9,
+      str_detect(tolower(CPU_CORES), "deca") ~ 10,
+      TRUE ~ NA_real_ # En caso de que no coincida con ningún patrón
+    )
+) 
+
+# GPU
+df_md <- df_md %>% mutate(
+  GPU_EXTENDED = GPU,
+  GPU = str_remove(GPU, "\\s-\\s.+")
+)
+
+# MEMORY
+df_md <- df_md %>%
+  mutate(
+    MEMORY_INT = ifelse(str_detect(MEMORY_INT, "^\\d+TB \\d+GB$"), str_extract(MEMORY_INT, "^\\d+TB"), MEMORY_INT),  
+    MEMORY_RAM = ifelse(str_detect(MEMORY_INT, "^\\d+TB \\d+GB$"), str_extract(MEMORY_INT, "\\d+GB$"), MEMORY_RAM),
+    MEMORY_INT_KB = case_when(
+      str_detect(MEMORY_INT, "MB") ~ as.numeric(str_extract(MEMORY_INT, "\\d+")) * 1024,  # MB a KB (binario)
+      str_detect(MEMORY_INT, "GB") ~ as.numeric(str_extract(MEMORY_INT, "\\d+")) * 1024 * 1024,  # GB a KB (binario)
+      str_detect(MEMORY_INT, "TB") ~ as.numeric(str_extract(MEMORY_INT, "\\d+")) * 1024 * 1024 * 1024,  # TB a KB (binario)
+      TRUE ~ NA_real_  # En caso de que no coincida con ninguna unidad
+    ),
+    
+    MEMORY_RAM_KB = case_when(
+      str_detect(MEMORY_RAM, "MB") ~ as.numeric(str_extract(MEMORY_RAM, "\\d+")) * 1024,  # MB a KB (binario)
+      str_detect(MEMORY_RAM, "GB") ~ as.numeric(str_extract(MEMORY_RAM, "\\d+")) * 1024 * 1024,  # GB a KB (binario)
+      str_detect(MEMORY_RAM, "TB") ~ as.numeric(str_extract(MEMORY_RAM, "\\d+")) * 1024 * 1024 * 1024,  # TB a KB (binario)
+      TRUE ~ NA_real_  # En caso de que no coincida con ninguna unidad
+    )
+  )
+
+# CARD SLOT 
+df_md <- df_md %>% mutate(
+  CARD_SLOT_EXTENDED = CARD_SLOT,
+  CARD_SLOT = case_when(
+    CARD_SLOT_EXTENDED %in% c("Unspecified", "To be confirmed") ~ "?",
+    CARD_SLOT_EXTENDED == "No" ~ "No",
+    !CARD_SLOT_EXTENDED %in% c("Unspecified", "To be confirmed", "No") ~ "Yes",
+  ),
+  MEMORY_CARD = case_when(
+    CARD_SLOT == "Yes" ~ str_extract(CARD_SLOT_EXTENDED, "^[^\\s,]+"),
+    CARD_SLOT != "Yes" ~ NA
+  ),
+  MEMORY_CARD_GB = case_when(
+    grepl("\\d+(\\s)(M|G|T)B", toupper(CARD_SLOT_EXTENDED)) ~ str_extract(CARD_SLOT_EXTENDED, "\\d+(\\s)(M|G|T)B"),
+    !grepl("\\d+(\\s)(M|G|T)B", toupper(CARD_SLOT_EXTENDED)) ~ NA
+  )
+)
+
+# BLUETOOTH
+df_md <- df_md %>% mutate(
+  BLUETOOTH = str_remove(BLUETOOTH, "(\\(|after).+"),
+  BLUETOOTH_VERSION = as.numeric(str_extract(BLUETOOTH, "\\d\\.\\d"))
+)
+
+# NFC
+df_md$NFC_EXTENDED <- df_md$NFC
+df_md <- df_md %>% mutate(
+  NFC = case_when(
+    grepl("(C|c)hina", NFC_EXTENDED) ~ "No",
+    NFC_EXTENDED == "No" ~ "No",
+    grepl("Yes", NFC_EXTENDED) ~ "Yes",
+    TRUE ~ "?", 
+    )
+  )
+
+# USB
+df_md <- df_md %>% mutate(
+  USB_TYPE = case_when(
+    grepl("Lightning", USB) ~ "Lightning",
+    grepl("MicroUSB", USB) ~ "MicroUSB",
+    grepl("USB", USB) & grepl("-C", USB) ~ "USB Type C",
+    grepl("No", USB) ~ "No",
+    TRUE ~ "Other"
+    )
+  )
+
+# BATTERY
+df_md$BATTERY_MAH_NUM <- as.numeric(str_extract(df_md$BATTERY_MAH, "\\d+")) 
+df_md$BATTERY_TYPE_EXTENDED <- df_md$BATTERY_TYPE
+df_md <- df_md %>% mutate(
+  BATTERY_TYPE = case_when(
+    grepl("Li-Po", BATTERY_TYPE_EXTENDED) ~ "Li-Po",
+    grepl("Li-Ion", BATTERY_TYPE_EXTENDED) ~ "Li-Ion",
+    grepl("Si/C", BATTERY_TYPE_EXTENDED) ~ "Si/C",
+    TRUE ~ "Other"
+    )
+  )
+
 ```
+
+###### pruebas
 
 ```{r}
-df_md <- df_md %>% mutate(
-  WEIGHT = sapply(str_extract_all(BULK, "\\d+(\\.\\d+)?(\\s)?(g|kg|mg)"), function(x) paste(x, collapse = ", "))#, 
-  # THICKNESS = ,
-  # INCHES = ,
-  # SCREEN_TO_BODY = 
-)
-view(df_md %>% select(NAME, BULK, THICKNESS))
+# BATTERY
+df_md$BATTERY_MAH_NUM <- as.numeric(str_extract(df_md$BATTERY_MAH, "\\d+")) 
+
+view(df_md %>% select(NAME, BATTERY_TYPE_EXTENDED, BATTERY_TYPE))
 ```
 
+# GUARDO EL MD LIMPIO
+
+# GUARDO EL RAW 
+
+```{r}
+write_csv2(df_md, "C:/Users/Jorge Pascual S/Desktop/Web-scraping-Smartphones-prices-in-Spain/Data/DF_MD.csv")
+```
