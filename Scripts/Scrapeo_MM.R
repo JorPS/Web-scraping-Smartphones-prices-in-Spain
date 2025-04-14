@@ -10,6 +10,8 @@ library(lubridate)
 library(stringdist)
 library(fuzzyjoin)
 
+userAgent <- "" # ADD YOUR USER AGENT
+set_config(user_agent(userAgent))
 
 wdPath <- "" # SET THE WORKING DIRECTORY ON THE REPOSITORY (./Web-scraping-Smartphones-prices-in-Spain)
 setwd(wdPath) 
