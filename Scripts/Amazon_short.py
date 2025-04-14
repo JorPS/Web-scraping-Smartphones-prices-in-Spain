@@ -221,8 +221,8 @@ dfAmazon.loc[dfAmazon['Precio'].isna(), 'Stock'] = False
 # GUARDADO
 
 # PATHS
-path_dfAmazon = r"C:\Users\Jorge Pascual S\Desktop\Web-scraping-Smartphones-prices-in-Spain\Data\dfAmazonSelenium.csv"
-path_dfAmazonHist = r"C:\Users\Jorge Pascual S\Desktop\Web-scraping-Smartphones-prices-in-Spain\Data\Histórico\dfAmazonHist.csv"
+path_dfAmazon = r"//Web-scraping-Smartphones-prices-in-Spain/Data/dfAmazonSelenium.csv"
+path_dfAmazonHist = r"//Web-scraping-Smartphones-prices-in-Spain/Data/Histórico/dfAmazonHist.csv"
 # GUARDADO
 ## junto el previo con el histórico
 dfAmazonPrev = pd.read_csv(path_dfAmazon, sep=';')

@@ -11,9 +11,12 @@ library(xml2)
 library(httr)
 library(lubridate)
 
-set_config(
-  user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0")
-)
+userAgent <- "" # ADD YOUR USER AGENT
+set_config(user_agent(userAgent))
+
+wdPath <- "" # SET THE WORKING DIRECTORY ON THE REPOSITORY (./Web-scraping-Smartphones-prices-in-Spain)
+setwd(wdPath) 
+
 ```
 
 ```{r}
@@ -239,7 +242,7 @@ masterdata_raw
 write_csv2(df_md, "C:/Users/Jorge Pascual S/Desktop/Web-scraping-Smartphones-prices-in-Spain/Data/Masterdata_raw.csv")
 ```
 
-###### pruebas
+###### pruebas (skip until LIMPIEZA ~ data cleaning)
 
 ```{r}
 product_html <- products_complete_url_chopped[4] %>% read_html()
@@ -372,30 +375,6 @@ cat(
 ```
 
 
-```{r}
-# cameras <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cam1modules']") %>% xml_text()
-# camera1 <- camera1 %>% str_extract(".*(?=\\r\\n)")
-# cameras <- paste0(cameras, "\r\n")
-# cameras %>% str_extract_all("(?=\r\n).*?(?=\r\n)")
-```
-
-
-```{r}
-# battery_charge_raw <- battery_charge_raw[2]
-# battery_charge_raw <- battery_charge_raw %>% xml_text()
-# battery_charge <- battery_charge_raw %>% str_extract(".*") %>% str_remove_all("\\(advertised\\)") %>% str_squish()
-# battery_charge
-# battery_wireless_raw <- battery_charge_raw %>% str_remove_all("/r/") %>% str_squish() %>% toupper()
-# if (grepl("WIRELESS", battery_wireless_raw)){
-#   battery_wireless = "Yes"
-# } else {
-#   battery_wireless = "No"
-# }
-# 
-# battery_wireless
-```
-
-
 # LIMPIEZA
 
 ```{r}
@@ -419,11 +398,6 @@ sum(duplicated(masterdata_raw))
 
 ```{r}
 df_md[df_md$MODEL_ID != "No",]
-```
-
-
-```{r}
-df_md <- masterdata_raw
 ```
 
 
@@ -594,19 +568,10 @@ df_md <- df_md %>% mutate(
 
 ```
 
-###### pruebas
 
-```{r}
-# BATTERY
-df_md$BATTERY_MAH_NUM <- as.numeric(str_extract(df_md$BATTERY_MAH, "\\d+")) 
-
-view(df_md %>% select(NAME, BATTERY_TYPE_EXTENDED, BATTERY_TYPE))
-```
 
 # GUARDO EL MD LIMPIO
 
-# GUARDO EL RAW 
-
 ```{r}
-write_csv2(df_md, "C:/Users/Jorge Pascual S/Desktop/Web-scraping-Smartphones-prices-in-Spain/Data/DF_MD.csv")
+write_csv2(df_md, "Data/DF_MD.csv")
 ```

@@ -7,14 +7,16 @@ library(xml2)
 library(httr)
 library(lubridate)
 
-set_config(
-  user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0")
-)
+userAgent <- "" # ADD YOUR USER AGENT
+
+set_config(user_agent(userAgent))
+
+wdPath <- "" # SET THE WORKING DIRECTORY ON THE REPOSITORY (./Web-scraping-Smartphones-prices-in-Spain)
+setwd(wdPath) 
 
 
-
-df_md_path <- "C:/Users/Jorge Pascual S/Desktop/Web-scraping-Smartphones-prices-in-Spain/Data/DF_MD.csv" 
-md_hist_path <- "C:/Users/Jorge Pascual S/Desktop/Web-scraping-Smartphones-prices-in-Spain/Data/Histórico/DF_MD_hist.csv"
+df_md_path <- "Data/DF_MD.csv" 
+md_hist_path <- "Data/Histórico/DF_MD_hist.csv"
 df_md <- read_csv2(df_md_path)
 # lo guardo en histórico
 write_csv2(df_md, md_hist_path)
@@ -413,7 +415,7 @@ updated_df_md <- rbind(df_md, new_md)
 
 
 # Save
-write_csv2(updated_df_md, "C:/Users/Jorge Pascual S/Desktop/Web-scraping-Smartphones-prices-in-Spain/Data/DF_MD.csv")
+write_csv2(updated_df_md, "Data/DF_MD.csv")
 
 
 

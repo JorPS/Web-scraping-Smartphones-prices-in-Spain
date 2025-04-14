@@ -11,10 +11,12 @@ library(stringdist)
 library(fuzzyjoin)
 
 
+wdPath <- "" # SET THE WORKING DIRECTORY ON THE REPOSITORY (./Web-scraping-Smartphones-prices-in-Spain)
+setwd(wdPath) 
 
 
-df_md <- read.csv2("C:/Users/Jorge Pascual S/Desktop/Web-scraping-Smartphones-prices-in-Spain/Data/DF_MD.csv")
-df_MM <- read.csv2("C:/Users/Jorge Pascual S/Desktop/Web-scraping-Smartphones-prices-in-Spain/Data/MediaMarkt_precios.csv")
+df_md <- read.csv2("Data/DF_MD.csv")
+df_MM <- read.csv2("Data/MediaMarkt_precios.csv")
 
 
 
@@ -169,12 +171,12 @@ df_prod_new <- df_merged %>% filter(!is.na(URL))  %>%
 
 
 # este chunk guarda el df_prod actual en df_prod_hist
-df_prod_prev <- read.csv2("C:/Users/Jorge Pascual S/Desktop/Web-scraping-Smartphones-prices-in-Spain/Data/DF_PROD.csv")
-df_prod_hist <- read.csv2("C:/Users/Jorge Pascual S/Desktop/Web-scraping-Smartphones-prices-in-Spain/Data/Histórico/DF_PROD_hist.csv")
+df_prod_prev <- read.csv2("Data/DF_PROD.csv")
+df_prod_hist <- read.csv2("Data/Histórico/DF_PROD_hist.csv")
 
 df_prod_hist <- rbind(df_prod_prev, df_prod_hist) # une el df_prod previo con el df_prod_hist
 
-write_csv2(df_prod_hist, "C:/Users/Jorge Pascual S/Desktop/Web-scraping-Smartphones-prices-in-Spain/Data/Histórico/DF_PROD_hist.csv")
+write_csv2(df_prod_hist, "Data/Histórico/DF_PROD_hist.csv")
 
 
 
@@ -185,6 +187,6 @@ df_prod_updated <- df_prod_new %>%
   filter(!(Marketplace == "MediaMarkt" & TimeStamp < (today() - days(7)))) # AJUSTAR SEGUN FABRICANTE
 
 # Guardo
-write_csv2(df_prod_updated, "C:/Users/Jorge Pascual S/Desktop/Web-scraping-Smartphones-prices-in-Spain/Data/DF_PROD.csv")
+write_csv2(df_prod_updated, "Data/DF_PROD.csv")
 
 

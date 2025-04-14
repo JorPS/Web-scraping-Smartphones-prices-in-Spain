@@ -9,8 +9,11 @@ library(stringdist)
 library(fuzzyjoin)
 
 # LEO DATAFRAMES
-df_amazon <- read.csv2("C:/Users/Jorge Pascual S/Desktop/Web-scraping-Smartphones-prices-in-Spain/Data/dfAmazonSelenium.csv")
-df_md <- read.csv2("C:/Users/Jorge Pascual S/Desktop/Web-scraping-Smartphones-prices-in-Spain/Data/DF_MD.csv")
+wdPath <- "" # SET THE WORKING DIRECTORY ON THE REPOSITORY (./Web-scraping-Smartphones-prices-in-Spain)
+setwd(wdPath) 
+
+df_amazon <- read.csv2("Data/dfAmazonSelenium.csv")
+df_md <- read.csv2("Data/DF_MD.csv")
 
 # Ajustar nombres de columnas para luego juntar
 df_amazon <- df_amazon %>%
