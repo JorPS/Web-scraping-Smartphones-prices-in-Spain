@@ -22,7 +22,7 @@
 
 El flujo de trabajo de los scripts se divide en las siguientes etapas:
 
-1.  **Creación y Actualización de la Tabla Maestra de Smartphones (gsmarena.com):**
+1.  **Creación y Actualización de la Tabla Maestra de Smartphones [https://gsmarena.com](gsmarena.com):**
     * `script_Smartphone_Masterdata.Rmd`: Este script realiza un web scraping del sitio web gsmarena.com para construir una tabla maestra inicial que contiene las características detalladas de diversos smartphones. Esta tabla sirve como base de datos para la integración posterior.
     * `Update_MD.R`: Este script se encarga de buscar nuevos modelos de smartphones en gsmarena.com y actualizar la tabla maestra existente con sus especificaciones.
 
