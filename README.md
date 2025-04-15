@@ -88,6 +88,7 @@ Para utilizar este repositorio, sigue estos pasos:
 ## ¡Toda contribución es bienvenida!
 
 Este es un proyecto que he comenzado para desarrollar y practicar mis habilidades con herramientas de Data Harvesting y las contribuciones son bienvenidas, siempre desde la buena fe y aras de compartir. Si tienes ideas para mejorar los scripts, añadir nuevas fuentes de datos, optimizar el rendimiento o mejorar la plantilla de Power BI, no dudes en crear un *fork* del repositorio y enviar tus *pull requests*.
+La licencia que permite que este proyecto sea de código abierto es Apache-2.0, cuyos detalles están en el archivo LICENSE.txt o en [https://www.apache.org/licenses/LICENSE-2.0.txt](https://www.apache.org/licenses/LICENSE-2.0.txt)
 
 ## ¿Más?
 
