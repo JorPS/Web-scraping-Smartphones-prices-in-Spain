@@ -92,31 +92,31 @@ newprod_url_list <- prod_url_list[!prod_url_list %in% url_list & prod_url_list !
 
 # Extraer características de cada producto
 
-# new_masterdata_raw <- data.frame(
-#     NAME = character(),
-#     MODEL_ID = character(),
-#     RELEASE_DATE = character(),
-#     STATUS = character(),
-#     BULK = character(),
-#     SIZE = character(),
-#     COLORS = character(),
-#     RESOLUTION = character(),
-#     OPERATIVE_SYSTEM = character(),
-#     CHIPSET = character(),
-#     CPU = character(),
-#     GPU = character(),
-#     MEMORY_INT = character(),
-#     MEMORY_RAM = character(),
-#     CARD_SLOT = character(),
-#     CONNECTION = character(),
-#     BLUETOOTH = character(),
-#     NFC = character(),
-#     USB = character(),
-#     BATTERY_MAH = character(),
-#     BATTERY_TYPE = character(),
-#     BATTERY_WIRELESS = character(),
-#     URL = character()
-# )
+new_masterdata_raw <- data.frame(
+    NAME = character(),
+    MODEL_ID = character(),
+    RELEASE_DATE = character(),
+    STATUS = character(),
+    BULK = character(),
+    SIZE = character(),
+    COLORS = character(),
+    RESOLUTION = character(),
+    OPERATIVE_SYSTEM = character(),
+    CHIPSET = character(),
+    CPU = character(),
+    GPU = character(),
+    MEMORY_INT = character(),
+    MEMORY_RAM = character(),
+    CARD_SLOT = character(),
+    CONNECTION = character(),
+    BLUETOOTH = character(),
+    NFC = character(),
+    USB = character(),
+    BATTERY_MAH = character(),
+    BATTERY_TYPE = character(),
+    BATTERY_WIRELESS = character(),
+    URL = character()
+)
 
 newprod_url_list <- newprod_url_list[!newprod_url_list %in% new_masterdata_raw$URL]
 
@@ -230,8 +230,6 @@ for (url in newprod_url_list){
   }
   print(n_distinct(new_masterdata_raw$URL))
 }
-
-new_masterdata_raw
 
 
 #### TRANSFORMACIÓN DE VARIABLES
