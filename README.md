@@ -62,14 +62,14 @@ Para utilizar este repositorio, sigue estos pasos:
     Crea una carpeta llamada `Data` en la raíz del repositorio.
 
 3.  **Instala las dependencias:**
-    Antes de ejecutar un script de R, asegúrate de tener instaladas las librerías necesarias ejecutando la siguiente línea en la consola de R.
-    ```r
-    install.packages(c("tidyverse", "xml2", "httr", "lubridate"))
-    ```
-    Además, navega a la carpeta `Scripts` y asegúrate de tener instaladas las bibliotecas de Python necesarias (por ejemplo, `selenium` o `pandas`). Puedes usar `pip` para instalarlas:
+    Navega a la carpeta `Scripts` y asegúrate de tener instaladas las bibliotecas de Python necesarias (por ejemplo, `selenium` o `pandas`). Puedes usar `pip` para instalarlas:
     ```bash
     cd Scripts
     pip install -r requirements.txt
+    ```
+    Además, antes de ejecutar un script de R, asegúrate de tener instaladas las librerías necesarias ejecutando la siguiente línea en la consola de R.
+    ```r
+    install.packages(c("tidyverse", "xml2", "httr", "lubridate"))
     ```
 
 4.  **Ejecuta los scripts:**
