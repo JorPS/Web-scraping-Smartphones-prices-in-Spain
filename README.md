@@ -6,21 +6,15 @@
 
 **En este proyecto, he desarrollado diversos scripts en Python y R para aprender y ejercitar el uso de herramientas de Data Harvesting para recopilar datos en la web, como selenium, xml y httr. El resultado es un conjunto de scripts que recopilan los datos y los precios de los smartphone en diferentes marketplaces populares en España. Estos datos alimentan una plantilla Power BI que permite buscar, filtrar y comparar distintos modelos de una manera sencilla y visual**
 
-## Estructura del Repositorio
+## 📂 Estructura del Repositorio
 
-├── Scripts/
-│   ├── script_Smartphone_Masterdata.Rmd
-│   │   └── # Script para crear la tabla maestra inicial de smartphones desde gsmarena.com
-│   ├── Update_MD.R
-│   │   └── # Script para actualizar la tabla maestra con nuevos dispositivos desde gsmarena.com
-│   ├── Scrapeo_MM.R
-│   │   └── # Script para scrapear precios de smartphones desde MediaMarkt.es
-│   ├── Amazon_short.py
-│   │   └── # Script para scrapear precios de smartphones desde Amazon.es
-│   ├── Merge_prices_amazon.R
-│   │   └── # Script para integrar los precios de Amazon con la tabla maestra
-└── COMPARE.pbit
-└── # Plantilla de Power BI para la visualización y comparación de datos
+* `Scripts/`
+    * `script_Smartphone_Masterdata.Rmd`: Script para crear la tabla maestra inicial de smartphones desde gsmarena.com
+    * `Update_MD.R`: Script para actualizar la tabla maestra con nuevos dispositivos desde gsmarena.com
+    * `Scrapeo_MM.R`: Script para scrapear precios de smartphones desde MediaMarkt.es
+    * `Amazon_short.py`: Script para scrapear precios de smartphones desde Amazon.es
+    * `Merge_prices_amazon.R`: Script para integrar los precios de Amazon con la tabla maestra
+* `COMPARE.pbit`: Plantilla de Power BI para la visualización y comparación de datos
 
 **Nota Importante:** Este repositorio **no incluye una carpeta llamada `Data`**. Los scripts generarán archivos de datos durante su ejecución. **Una vez clonado el repositorio, el usuario deberá crear manualmente una carpeta llamada `Data` en la raíz del repositorio para que los scripts puedan guardar y leer los datos correctamente.**
 
@@ -57,10 +51,9 @@ Para utilizar este repositorio, sigue estos pasos:
 
 1.  **Clona el repositorio:**
     ```bash
-    git clone [https://github.com/TuUsuario/TuRepositorio.git](https://github.com/TuUsuario/TuRepositorio.git)
+    git clone [https://github.com/JorPS/Web-scraping-Smartphones-prices-in-Spain.git](https://github.com/JorPS/Web-scraping-Smartphones-prices-in-Spain.git)
     cd TuRepositorio
     ```
-    (Reemplaza `TuUsuario/TuRepositorio.git` con la URL real de tu repositorio).
 
 2.  **Crea la carpeta `Data`:**
     ```bash
