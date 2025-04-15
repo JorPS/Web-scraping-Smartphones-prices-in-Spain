@@ -31,8 +31,8 @@ El flujo de trabajo de los scripts se divide en las siguientes etapas:
     * `Scripts/Amazon_short.py`: Este script extrae los precios de los smartphones ofrecidos en el sitio web de Amazon España (Amazon.es).
 
 3.  **Integración de Precios y Actualización de la Tabla Comparativa:**
-    * `En el caso de MediaMarkt, los datos se integran en el mismo script del scraping `Scrapeo_MM.R`.
-    * En el caso de Amazon, la información recopilada se integra con el script `Merge_prices_amazon.R`.
+    * En el caso de **MediaMarkt**, los datos se integran en el mismo script del scraping `Scrapeo_MM.R.
+    * En el caso de **Amazon**, la información recopilada se integra con el script `Merge_prices_amazon.R`.
     * `DF_PROD`: Esta dataframe es el resultado del procesamiento de los datos recopilados y alimenta la plantilla de Power BI (`Compare.pbit`) que es el resultado final de este proyecto, `el comparador`.
 
 ## El Comparador
