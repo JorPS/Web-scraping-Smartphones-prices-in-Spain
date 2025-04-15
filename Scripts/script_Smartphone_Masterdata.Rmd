@@ -5,6 +5,8 @@ date: "2024-12-23"
 output: html_document
 ---
 
+This script extracts information from gsmarena.com and builds a dataframe with smartphone characteristics. It must be used only once. For updates, the script Update_MD.R can be used. Bear in mind, that this script is not prepared for connection related issues and it may be needed to be run more than once from the line 133 until the end of its loop.
+
 ```{r}
 library(tidyverse)
 library(xml2)
@@ -28,8 +30,7 @@ gsm_home_html <- read_html(gsm_home_url)
 ```{r}
 # EXTRAER LA ULTIMA PARTE DE LAS URL
 fabr_semiurl_list <- gsm_home_html %>% xml_find_all("//div[@class = 'brandmenu-v2 light l-box clearfix']//li/a") %>% 
-  xml_attr("href") # %>% as.list()
-# fabr_semiurl_list
+  xml_attr("href") 
 
 post_fabr_semiurl_list <- fabr_semiurl_list[c(1:16, 20, 21, 33)]
 post_fabr_semiurl_list
@@ -102,35 +103,35 @@ length(products_complete_url)
 ```{r}
 # Extraer características de cada producto
 
-# masterdata_raw <- data.frame(
-#     NAME = character(),
-#     MODEL_ID = character(),
-#     RELEASE_DATE = character(),
-#     STATUS = character(),
-#     BULK = character(),
-#     SIZE = character(),
-#     COLORS = character(),
-#     RESOLUTION = character(),
-#     OPERATIVE_SYSTEM = character(),
-#     CHIPSET = character(),
-#     CPU = character(),
-#     GPU = character(),
-#     MEMORY_INT = character(),
-#     MEMORY_RAM = character(),
-#     CARD_SLOT = character(),
-#     BLUETOOTH = character(),
-#     NFC = character(),
-#     USB = character(),
-#     BATTERY_MAH = character(),
-#     BATTERY_TYPE = character(),
-#     BATTERY_WIRELESS = character(),
-#     URL = character()
-# )
+masterdata_raw <- data.frame(
+    NAME = character(),
+    MODEL_ID = character(),
+    RELEASE_DATE = character(),
+    STATUS = character(),
+    BULK = character(),
+    SIZE = character(),
+    COLORS = character(),
+    RESOLUTION = character(),
+    OPERATIVE_SYSTEM = character(),
+    CHIPSET = character(),
+    CPU = character(),
+    GPU = character(),
+    MEMORY_INT = character(),
+    MEMORY_RAM = character(),
+    CARD_SLOT = character(),
+    BLUETOOTH = character(),
+    NFC = character(),
+    USB = character(),
+    BATTERY_MAH = character(),
+    BATTERY_TYPE = character(),
+    BATTERY_WIRELESS = character(),
+    URL = character()
+)
 
-# products_complete_url_chopped <- products_complete_url[seq(1, 5000, 400)] # recorto parte para probar
+# Execute from here again if the code stops due to disconnection or any other reason
 products_complete_url <- products_complete_url[nrow(masterdata_raw)+1:length(products_complete_url)]
 
-for (url in products_complete_url){
+for (url in products_complete_url){ 
   
   product_html <- url %>% read_html()
   Sys.sleep(9)
@@ -166,7 +167,7 @@ for (url in products_complete_url){
   memory_ram <- str_remove(memory_raw, memory_int) %>% str_extract(".*?.B") %>% str_squish()
   card_slot <- product_html %>% xml_find_all("//tr//td[@data-spec = 'memoryslot']") %>% xml_text()
   
-  # CAMERA
+  # CAMERA (on development)
   # n_cameras <- product_html %>% xml_find_all("//tr//td[@class = 'ttl']//a[@href = 'glossary.php3?term=camera']") %>% xml_text()
   # n_cameras <- n_cameras[1]
   # 
@@ -236,116 +237,8 @@ masterdata_raw
 ```
 
 
-# GUARDO EL RAW 
 
-```{r}
-write_csv2(df_md, "C:/Users/Jorge Pascual S/Desktop/Web-scraping-Smartphones-prices-in-Spain/Data/Masterdata_raw.csv")
-```
-
-###### pruebas (skip until LIMPIEZA ~ data cleaning)
-
-```{r}
-product_html <- products_complete_url_chopped[4] %>% read_html()
-
-# NOMBRE DE MODELO
-name <- product_html %>% xml_find_all("//h1[@data-spec = 'modelname']") %>% xml_text()
-model_id <- product_html %>% xml_find_all("//tr//td[@data-spec = 'models']") %>% xml_text()
-# FECHA DE SALIDA
-released <- product_html %>% xml_find_all("//span[@data-spec = 'released-hl']") %>% xml_text() # if 'cancelled', next iteration
-status <- product_html %>% xml_find_all("//tr//td[@data-spec = 'status']") %>% xml_text()
-
-# DIMENSIONES
-bulk <- product_html %>% xml_find_all("//span[@data-spec = 'body-hl']") %>% xml_text()
-size <- product_html %>% xml_find_all("//td[@data-spec = 'displaysize']") %>% xml_text()
-available_colors <- product_html %>% xml_find_all("//tr//td[@data-spec = 'colors']") %>% xml_text()
-  
-# PANTALLA
-resolution <- product_html %>% xml_find_all("//tr//td[@data-spec = 'displayresolution']") %>% xml_text()
-
-# SISTEMA OPERATIVO 
-OS <- product_html %>% xml_find_all("//tr//td[@data-spec = 'os']") %>% xml_text()
-# CHIPSET
-chipset <- product_html %>% xml_find_all("//tr//td[@data-spec = 'chipset']") %>% xml_text()
-# CPU
-cpu <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cpu']") %>% xml_text()
-# GPU
-gpu <- product_html %>% xml_find_all("//tr//td[@data-spec = 'gpu']") %>% xml_text()
-
-# MEMORIA
-memory_raw <- product_html %>% xml_find_all("//tr//td[@data-spec = 'internalmemory']") %>% xml_text()
-memory_int <- str_extract(memory_raw, ".*?GB")
-memory_ram <- str_remove(memory_raw, memory_int) %>% str_extract(".*?.B") %>% str_squish()
-card_slot <- product_html %>% xml_find_all("//tr//td[@data-spec = 'memoryslot']") %>% xml_text()
-
-# CAMERA
-# n_cameras <- product_html %>% xml_find_all("//tr//td[@class = 'ttl']//a[@href = 'glossary.php3?term=camera']") %>% xml_text()
-# n_cameras <- n_cameras[1]
-# 
-# cameras <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cam1modules']") %>% xml_text()
-# camera1 <- camera1 %>% str_extract(".*(?=\\r\\n)")
-# camera2
-# camera3
-# camera4
-# 
-# 
-# video <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cam1video']") %>% xml_text()
-# 
-# selfie_raw <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cam2modules']") %>% xml_text()
-# selfie_raw
-# selfie <- selfie_raw %>% str_extract(".*(?=\\r\\n)")
-# selfie <- ifelse(is.na(selfie), selfie_raw, selfie)
-# selfie_video <- product_html %>% xml_find_all("//tr//td[@data-spec = 'cam2video']") %>% xml_text()
-
-# CONNECTIONS
-bluetooth <- product_html %>% xml_find_all("//tr//td[@data-spec = 'bluetooth']") %>% xml_text()
-nfc <- product_html %>% xml_find_all("//tr//td[@data-spec = 'nfc']") %>% xml_text()
-usb <- product_html %>% xml_find_all("//tr//td[@data-spec = 'usb']") %>% xml_text()
-
-# BATTERY
-battery_raw <- product_html %>% xml_find_all("//tr//td[@data-spec = 'batdescription1']") %>% xml_text()
-battery_mah <- battery_raw %>% str_extract("\\d*? mAh") %>% str_squish()
-battery_type <- battery_raw %>% str_extract(".*(?= \\d)") %>% str_squish()
-
-battery_charge_raw <- product_html %>% xml_find_all("//table[tr//td[@data-spec = 'batdescription1']]//td[@class = 'nfo']") %>% xml_text()
-battery_charge_raw <- ifelse(length(battery_charge_raw) > 1, paste(battery_charge_raw, collapse = "-"), battery_charge_raw)
-
-battery_charge <- battery_charge_raw %>% str_extract(".*") %>% str_remove_all("\\(advertised\\)") %>% str_squish()
-battery_wireless_raw <- battery_charge_raw %>% str_remove_all("/r/") %>% str_squish() %>% toupper()
-if (grepl("WIRELESS", battery_wireless_raw)){
-  battery_wireless = "Yes"
-} else {
-  battery_wireless = "No"
-}
-
-df_actual <- data.frame(
-  NAME = ifelse(length(name) == 0, "No", name),
-  MODEL_ID = ifelse(length(model_id) == 0, "No", model_id),
-  RELEASE_DATE = ifelse(length(released) == 0, "No", released),
-  STATUS = ifelse(length(status) == 0, "No", status),
-  BULK = ifelse(length(bulk) == 0, "No", bulk),
-  SIZE = ifelse(length(size) == 0, "No", size),
-  COLORS = ifelse(length(available_colors) == 0, "No", available_colors),
-  RESOLUTION = ifelse(length(resolution) == 0, "No", resolution),
-  OPERATIVE_SYSTEM = ifelse(length(OS) == 0, "No", OS),
-  CHIPSET = ifelse(length(chipset) == 0, "No", chipset),
-  CPU = ifelse(length(cpu) == 0, "No", cpu),
-  GPU = ifelse(length(gpu) == 0, "No", gpu),
-  MEMORY_INT = ifelse(length(memory_int) == 0, "No", memory_int),
-  MEMORY_RAM = ifelse(length(memory_ram) == 0, "No", memory_ram),
-  CARD_SLOT = ifelse(length(card_slot) == 0, "No", card_slot),
-  BLUETOOTH = ifelse(length(bluetooth) == 0, "No", bluetooth),
-  NFC = ifelse(length(nfc) == 0, "No", nfc),
-  USB = ifelse(length(usb) == 0, "No", usb),
-  BATTERY_MAH = ifelse(length(battery_mah) == 0, "No", battery_mah),
-  BATTERY_TYPE = ifelse(length(battery_type) == 0, "No", battery_type),
-  BATTERY_WIRELESS = ifelse(length(battery_wireless) == 0, "No", battery_wireless),
-  URL = ifelse(length(url) == 0, "No", url)
-)
-
-masterdata_raw <- rbind(masterdata_raw, df_actual)
-
-masterdata_raw
-```
+#### Comrpobaciones
 
 ```{r}
 cat(
@@ -383,21 +276,12 @@ freq_table <- table(products_complete_url)
 freq_table[freq_table > 1]
 
 
-```
-
-```{r}
 # urls duplicados en la MD
 dup_table <- duplicated(masterdata_raw$URL)
 masterdata_raw$URL[duplicated(masterdata_raw$URL)]
 
-```
 
-```{r}
 sum(duplicated(masterdata_raw))
-```
-
-```{r}
-df_md[df_md$MODEL_ID != "No",]
 ```
 
 
