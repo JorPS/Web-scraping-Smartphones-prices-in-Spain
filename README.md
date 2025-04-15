@@ -39,6 +39,8 @@ El flujo de trabajo de los scripts se divide en las siguientes etapas:
 
 El archivo `Compare.pbit` es una plantilla de Power BI que se conecta a los datos procesados por los scripts. Al abrir esta plantilla (requiere tener Power BI Desktop instalado), podrás:
 
+![Plantilla de comparación en Power BI](Images/CompareTemplate.png)
+
 * **Buscar** smartphones específicos por nombre o características.
 * **Filtrar** dispositivos por marca, rango de precios, especificaciones técnicas, etc.
 * **Comparar** en tablas las características y precios de diferentes smartphones.
