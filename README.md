@@ -35,7 +35,7 @@ El flujo de trabajo de los scripts se divide en las siguientes etapas:
     * `integrar_precios_amazon.py`: Similar al anterior, este script integra los precios de Amazon con la tabla maestra.
     * `actualizar_tabla_comparativa.py`: Este script toma los datos integrados (características + precios de diferentes fuentes) y actualiza la tabla final que sirve como fuente de datos para la plantilla de Power BI (`Compare.pbit`).
 
-## Comparador de Power BI (Compare.pbit)
+## El Comparador
 
 El archivo `Compare.pbit` es una plantilla de Power BI que se conecta a los datos procesados por los scripts. Al abrir esta plantilla (requiere tener Power BI Desktop instalado), podrás:
 
@@ -45,7 +45,7 @@ El archivo `Compare.pbit` es una plantilla de Power BI que se conecta a los dato
 
 El objetivo de este proyecto es contribuir al desarrollo de herramientas que, como consumidores, nos ayuden a tomar decisiones desde el acceso fácil y claro a la información, en lugar de basarlas en campañas de marketing en un mercado altamente competitivo en el que hay cientos de dispositivos. 
 
-## Primeros Pasos y Consideraciones
+## Paso a paso
 
 Para utilizar este repositorio, sigue estos pasos:
 
@@ -78,7 +78,7 @@ Para utilizar este repositorio, sigue estos pasos:
 5.  **Abre `Compare.pbit` en Power BI Desktop:**
     Una vez que los scripts hayan generado los archivos de datos en la carpeta `Data`, abre la plantilla `Compare.pbit` con Power BI Desktop. Power BI te pedirá que conectes la plantilla a las fuentes de datos generadas.
 
-**Es importante tener en cuenta que:**
+**Consideraciones importantes:**
 
 * Los sitios web pueden cambiar su estructura, lo que podría requerir **ajustes en el código de los scripts** para que sigan funcionando correctamente.
 * La ejecución de los scripts de scraping puede llevar tiempo, dependiendo de la cantidad de datos a extraer y la velocidad de tu conexión a internet.
@@ -87,7 +87,8 @@ Para utilizar este repositorio, sigue estos pasos:
 
 ## ¡Toda contribución es bienvenida!
 
-Este es un proyecto que he comenzado para desarrollar y practicar mis habilidades con herramientas de Data Harvesting y las contribuciones son bienvenidas, siempre desde la buena fe y aras de compartir. Si tienes ideas para mejorar los scripts, añadir nuevas fuentes de datos, optimizar el rendimiento o mejorar la plantilla de Power BI, no dudes en crear un *fork* del repositorio y enviar tus *pull requests*.
+Este es un proyecto que he comenzado para aprender, desarrollar y practicar mis habilidades con herramientas de Data Harvesting y las contribuciones son bienvenidas, siempre desde la buena fe y aras de compartir. Si tienes ideas para mejorar los scripts, añadir nuevas fuentes de datos, optimizar el rendimiento o mejorar la plantilla de Power BI, no dudes en crear un *fork* del repositorio y enviar tus *pull requests*.
+
 La licencia que permite que este proyecto sea de código abierto es Apache-2.0, cuyos detalles están en el archivo LICENSE.txt o en [https://www.apache.org/licenses/LICENSE-2.0.txt](https://www.apache.org/licenses/LICENSE-2.0.txt)
 
 ## ¿Más?
